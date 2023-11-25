@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"server/core"
+	"server/app"
 )
 
 func main() {
 
-	args := core.ResolveArgs(os.Args[1:])
-	fmt.Println(args)
+	app.ResolveArgs(os.Args[1:])
 
 	// t := test{Name: "test", Test: "name"}
 	// var e* test = new(test)
@@ -17,5 +15,4 @@ func main() {
 	// config.ToJSON(t, "./test.json")
 	// config.ParseJSON(e, "./test.json")
 	// fmt.Println(e)
-
 }
