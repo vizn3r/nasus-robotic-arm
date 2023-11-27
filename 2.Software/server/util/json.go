@@ -16,7 +16,7 @@ func ToJSON(data any, dest string) error {
 	return nil
 }
 
-func ParseJSON(dest any, source string) error {
+func ParseJSON(dest any, source string) error{
 	b, err := os.ReadFile(source)
 	if err != nil {
 		return err

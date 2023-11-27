@@ -3,12 +3,14 @@ package app
 import (
 	"fmt"
 	"server/arm"
+	"server/com"
 	"server/util"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-var Version = "Nasus Server v0.0.1" // VERSION OF SOFTWARE
+var Version = "Nasus Firmware v0.0.1" // VERSION OF SOFTWARE
 
 type arg struct {
 	name   string
@@ -40,9 +42,9 @@ func findArg(a string, args []arg) arg {
 
 // Help menu
 func helpFunc(args []arg) {
-	out := Version + "\nby vizn3r\n\nArguments:\n"
+	out := Version + "\nby vizn3r\n\n\nArguments:\n"
 	for _, a := range args {
-		out += "	" + a.name + " " + a.desc + "\n"
+		out += "	" + strings.Join(append([]string{a.name}, a.call...), " / ") + " " + a.desc + "\n"
 	}
 	fmt.Println(out)
 }
@@ -53,6 +55,7 @@ func ResolveArgs(args []string) {
 	// Application arguments
 	var _args = make([]arg, 0)
 	_args = []arg{
+		{name: "\nTEST: "},
 		{
 			name: "test",
 			desc: "[...args] - test command",
@@ -62,7 +65,7 @@ func ResolveArgs(args []string) {
 			},
 		},
 
-		// Math arguments
+		{name: "\nMATH: "},
 		{
 			name: "degtostep",
 			desc: "[angles, dest, step] - Convert degrees to steps",
@@ -88,29 +91,56 @@ func ResolveArgs(args []string) {
 			},
 		},
 
-		// Arm control
+		{name: "\nARM CONTROL: "},
 		{
 			name: "code",
-			desc: "[code, ...args] - Execute arm code",
+			desc: "[code, ...args] | [filePath] - Execute arm code",
 			call: []string{"c"},
 			params: 1,
 			run: func(s []string) {
-				arm.ResolveCode(s[0], s[1:])
+				arm.ResolveCode(s)
 			},
 		},
 
-		// Config
-		// {
-		// 	name: "config",
-		// 	desc: "[option, value] - Configure a value",
-		// 	call: []string{"conf", "cf", "set"},
-		// 	params: 2,
-		// 	run: func(s []string) {
-		// 		c := ConfigFromFile()
-
-		// 		c.UpdateFile(*c)
-		// 	},
-		// },
+		{name: "\nAPPLICATION"},
+		{
+			name: "http",
+			desc: " - Start HTTP server",
+			run: func(s []string) {
+				c := ConfigFromFile()
+				var wg sync.WaitGroup
+				wg.Add(1)	
+				go func () {
+					com.StartHTTP(c.HTTP)
+					defer wg.Done()
+				}()
+				wg.Wait()
+			},
+		},
+		{
+			name: "btconnect",
+			call: []string{"btc"},
+			desc: " - Connect to bluetooth device",
+			run: func(s []string) {
+				com.ConnectBT()
+			},
+		},
+		{
+			name: "listen",
+			call: []string{"l"},
+			desc: "[baud] - Print serial data from port",
+			run: func(s []string) {
+				for {com.ReadSerial()}
+			},
+		},
+		{
+			name: "controller",
+			call: []string{"con"},
+			desc: " - Test controller",
+			run: func(s []string) {
+				for {com.ReadController()}
+			},
+		},
 	}
 
 	// Show help if no args

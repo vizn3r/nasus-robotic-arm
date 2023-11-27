@@ -1,12 +1,11 @@
 package app
 
 import (
-	"fmt"
 	"server/com"
 	"server/util"
 )
 
-var MAINCONFIGPATH = "./.config/config.json"
+var MAINCONFIGPATH = "./.config.json"
 
 // Configuration for this application
 type Config struct {
@@ -23,14 +22,7 @@ func ConfigFromFile() *Config {
 	c := new(Config)
 	err := util.ParseJSON(c, MAINCONFIGPATH)
 	if err != nil {
-		fmt.Println("Config created.")
+		ConfigToFile(c)
 	}
 	return c
-}
-
-func (c *Config) UpdateFile(conf Config) {
-	err := util.ToJSON(conf, MAINCONFIGPATH)
-	if err != nil {
-		fmt.Println("Config does not exist.")
-	}
 }

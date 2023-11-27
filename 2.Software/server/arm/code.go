@@ -1,34 +1,48 @@
 package arm
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // G-code directs the motion and function of the CNC machine, while M-code controls the operations not involving movements
 
-var XYZ []float64 = []float64{0.0, 0.0, 0.0}
-
-
-func ResolveArgs(args []string) {
+func ResolveArgs(args []string) []float64 {
+	arr := []float64{0.0, 0.0, 0.0, 0.0}
 	for _, a := range args {
 		switch a[:1] {
 		case "X":
 			d, _ := strconv.ParseFloat(a[1:], 64)
-			XYZ[0] = d
+			arr[0] = d
 		case "Y":
 			d, _ := strconv.ParseFloat(a[1:], 64)
-			XYZ[1] = d
+			arr[1] = d
 		case "Z":
 			d, _ := strconv.ParseFloat(a[1:], 64)
-			XYZ[2] = d
+			arr[2] = d
+		case "F":
+			d, _ := strconv.ParseFloat(a[1:], 64)
+			arr[3] = d
 		}
+		
 	}
+	// ALWAYS IN FORMAT X Y Z F
+	return arr
+}
+
+// If I want to return smth, just make channel for that
+var gcodes = []func(...string) {
+	func(args ...string) { // Linear move
+		MoveXYZ(ResolveArgs(args))
+	},
 }
 
 // Resolves arm code
-func ResolveCode(code string, args []string) {
-	ResolveArgs(args)
-	switch code {
-		// G code
-	case "G0":
-		MoveXYZ(XYZ[0], XYZ[1], XYZ[2])
+func ResolveCode(args []string) {
+	// ResolveArgs(args)
+	cLow := strings.ToLower(args[0])
+	if strings.HasPrefix(cLow, "g") {
+		i, _ := strconv.Atoi(args[0][1:])
+		gcodes[i](args[1:]...)
 	}
 }
