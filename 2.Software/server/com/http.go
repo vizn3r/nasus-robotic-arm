@@ -10,11 +10,12 @@ type HTTPConf struct {
 	Port string
 }
 
-func StartHTTP(conf HTTPConf) {
+func StartHTTP(conf HTTPConf) any {
 	fmt.Println("Port: " + conf.Port)
 	server := fiber.New()
 	server.Get("/", func(c *fiber.Ctx) error {
 		return c.Send([]byte("Hello world!"))
 	})
 	server.Listen(":" + conf.Port)
+	return nil
 }

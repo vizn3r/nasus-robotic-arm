@@ -16,8 +16,18 @@ type Command struct {
 	name   string
 	desc   string
 	call   []string
-	run    func([]string)
+	run    func(ctx *CommandCTX)
 	params int
+}
+
+type CommandCTX struct {
+	 args []string
+	 waitGroup *sync.WaitGroup
+}
+
+func (ctx *CommandCTX) Float64Arg(arg string) float64 {
+	f, _ := strconv.ParseFloat(arg, 64)
+	return f
 }
 
 // Make sure that args will not be empty so the program won't throw ugly errors :)
@@ -25,7 +35,8 @@ func resolveArgs(args []string, params int) []string {
 	if len(args) >= params {
 		return args
 	}
-	return []string{"", "", "", "", "", "", "", ""}
+	util.PrintExt("Not enought arguments. Use 'help' command for help.")
+	return nil
 }
 
 // Find and return argument based on input if it exixst, otherwise return empty argument with no name
@@ -35,16 +46,14 @@ func findCommand(cmd string, cmds []Command) Command {
 			return c
 		} 
 	}
-	fmt.Println("Argument not found.")
-	helpFunc(cmds)
 	return Command{name: ""}
 }
 
 // Help menu
-func helpFunc(args []Command) {
+func helpFunc(cmds []Command) {
 	out := Version + "\nby vizn3r\n\n\nArguments:\n"
-	for _, a := range args {
-		out += "	" + strings.Join(append([]string{a.name}, a.call...), " / ") + " " + a.desc + "\n"
+	for _, c := range cmds {
+		out += "	" + strings.Join(append([]string{c.name}, c.call...), " / ") + " " + c.desc + "\n"
 	}
 	fmt.Println(out)
 }
@@ -52,7 +61,7 @@ func helpFunc(args []Command) {
 // Resolves user arguments
 func ResolveArgs(args []string) {
 
-	// Application arguments
+	// Application commands
 	var cmds = make([]Command, 0)
 	cmds = []Command{
 		{name: "\nTEST: "},
@@ -60,8 +69,8 @@ func ResolveArgs(args []string) {
 			name: "test",
 			desc: "[...args] - test command",
 			call: []string{"t", "tst"},
-			run: func(s []string) {
-				fmt.Println(s)
+			run: func(ctx *CommandCTX) {
+				fmt.Println(ctx.args)
 			},
 		},
 
@@ -71,10 +80,10 @@ func ResolveArgs(args []string) {
 			desc: "[angles, dest, step] - Convert degrees to steps",
 			call: []string{"dts"},
 			params: 3,
-			run: func(s []string) {
-				s0, _ := strconv.ParseFloat(s[0], 64)
-				s1, _ := strconv.ParseFloat(s[1], 64)
-				s2, _ := strconv.ParseFloat(s[2], 64)
+			run: func(ctx *CommandCTX) {
+				s0, _ := strconv.ParseFloat(ctx.args[0], 64)
+				s1, _ := strconv.ParseFloat(ctx.args[1], 64)
+				s2, _ := strconv.ParseFloat(ctx.args[2], 64)
 				fmt.Println(arm.AngleToSteps(s0, s1, s2))
 			},
 		},
@@ -83,10 +92,10 @@ func ResolveArgs(args []string) {
 			desc: "[angle, steps, step] - Convert steps to degrees",
 			call: []string{"std"},
 			params: 3,
-			run: func(s []string) {
-				s0, _ := strconv.ParseFloat(s[0], 64)
-				s1, _ := strconv.ParseFloat(s[1], 64)
-				s2, _ := strconv.ParseFloat(s[2], 64)
+			run: func(ctx *CommandCTX) {
+				s0, _ := strconv.ParseFloat(ctx.args[0], 64)
+				s1, _ := strconv.ParseFloat(ctx.args[1], 64)
+				s2, _ := strconv.ParseFloat(ctx.args[2], 64)
 				fmt.Println(arm.StepsToAngle(s0, s1, s2))
 			},
 		},
@@ -97,8 +106,8 @@ func ResolveArgs(args []string) {
 			desc: "[code, ...args] | [filePath] - Execute arm code",
 			call: []string{"c"},
 			params: 1,
-			run: func(s []string) {
-				arm.ResolveCode(s)
+			run: func(ctx *CommandCTX) {
+				arm.ResolveCode(ctx.args)
 			},
 		},
 
@@ -106,22 +115,20 @@ func ResolveArgs(args []string) {
 		{
 			name: "http",
 			desc: "- Start HTTP server",
-			run: func(s []string) {
+			run: func(ctx *CommandCTX) {
 				c := ConfigFromFile()
-				var wg sync.WaitGroup
-				wg.Add(1)	
-				go func () {
+				ctx.waitGroup.Add(1)
+				go func(){
+					defer ctx.waitGroup.Done()
 					com.StartHTTP(c.HTTP)
-					defer wg.Done()
 				}()
-				wg.Wait()
 			},
 		},
 		{
 			name: "btconnect",
 			call: []string{"btc"},
 			desc: "- Connect to bluetooth device",
-			run: func(s []string) {
+			run: func(ctx *CommandCTX) {
 				com.ConnectBT()
 			},
 		},
@@ -129,16 +136,16 @@ func ResolveArgs(args []string) {
 			name: "listen",
 			call: []string{"l"},
 			desc: "[baud] - Print serial data from port",
-			run: func(s []string) {
-				for {com.ReadSerial()}
+			run: func(ctx *CommandCTX) {
+				// for {com.ReadSerial()}
 			},
 		},
 		{
 			name: "controller",
 			call: []string{"con"},
 			desc: " - Test controller",
-			run: func(s []string) {
-				for {com.ReadController()}
+			run: func(ctx *CommandCTX) {
+				// for {com.ReadController()}
 			},
 		},
 	}
@@ -146,26 +153,20 @@ func ResolveArgs(args []string) {
 	// Show help if no args
 	if len(args) == 0 {
 		helpFunc(cmds)
-	}
-	
-	if a := findCommand(args[0], cmds); a.name != "" {
-		a.run(resolveArgs(args[1:], a.params))
 		return
 	}
-	fmt.Println("Command not found")
+	
+	// Find command and execute
+	if a := findCommand(args[0], cmds); a.name != "" {
+		ctx := new(CommandCTX)
+		if ctx.args = resolveArgs(args[1:], a.params); ctx.args == nil {
+			return
+		}
 
-	// // Loop through user input arguments
-	// for i, a := range args {
-
-	// 	// Check for argument
-	// 	if _, e := strconv.Atoi(a); !strings.HasPrefix(a, "-") || e == nil {
-	// 		continue
-	// 	}
-
-	// 	// Find and execute arguments
-	// 	arg := findArg(a, _args)
-	// 	if arg.name != "" {
-	// 		arg.run(resolveArgs(args[i + 1:], arg.params))
-	// 	}
-	// }
+		ctx.waitGroup = new(sync.WaitGroup)
+		a.run(ctx)
+		ctx.waitGroup.Wait()
+		return
+	}
+	util.PrintExt("Command not found")
 }
