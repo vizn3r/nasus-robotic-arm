@@ -10,17 +10,17 @@ import (
 func ResolveArgs(args []string) []float64 {
 	arr := []float64{0.0, 0.0, 0.0, 0.0}
 	for _, a := range args {
-		switch a[:1] {
-		case "X":
+		switch strings.ToLower(a[:1]) {
+		case "x":
 			d, _ := strconv.ParseFloat(a[1:], 64)
 			arr[0] = d
-		case "Y":
+		case "y":
 			d, _ := strconv.ParseFloat(a[1:], 64)
 			arr[1] = d
-		case "Z":
+		case "z":
 			d, _ := strconv.ParseFloat(a[1:], 64)
 			arr[2] = d
-		case "F":
+		case "f":
 			d, _ := strconv.ParseFloat(a[1:], 64)
 			arr[3] = d
 		}

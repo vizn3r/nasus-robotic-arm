@@ -12,7 +12,7 @@ import (
 
 var Version = "Nasus Firmware v0.0.1" // VERSION OF SOFTWARE
 
-type arg struct {
+type Command struct {
 	name   string
 	desc   string
 	call   []string
@@ -29,19 +29,19 @@ func resolveArgs(args []string, params int) []string {
 }
 
 // Find and return argument based on input if it exixst, otherwise return empty argument with no name
-func findArg(a string, args []arg) arg {
-	for _, _a := range args {
-		if strings.Compare(_a.name, a[1:]) == 0 || util.StringArrayHas(_a.call, a[1:]) {
-			return _a
+func findCommand(cmd string, cmds []Command) Command {
+	for _, c := range cmds {
+		if strings.Compare(c.name, cmd) == 0 || util.StringArrayHas(c.call, cmd) {
+			return c
 		} 
 	}
 	fmt.Println("Argument not found.")
-	helpFunc(args)
-	return arg{name: ""}
+	helpFunc(cmds)
+	return Command{name: ""}
 }
 
 // Help menu
-func helpFunc(args []arg) {
+func helpFunc(args []Command) {
 	out := Version + "\nby vizn3r\n\n\nArguments:\n"
 	for _, a := range args {
 		out += "	" + strings.Join(append([]string{a.name}, a.call...), " / ") + " " + a.desc + "\n"
@@ -53,8 +53,8 @@ func helpFunc(args []arg) {
 func ResolveArgs(args []string) {
 
 	// Application arguments
-	var _args = make([]arg, 0)
-	_args = []arg{
+	var cmds = make([]Command, 0)
+	cmds = []Command{
 		{name: "\nTEST: "},
 		{
 			name: "test",
@@ -105,7 +105,7 @@ func ResolveArgs(args []string) {
 		{name: "\nAPPLICATION"},
 		{
 			name: "http",
-			desc: " - Start HTTP server",
+			desc: "- Start HTTP server",
 			run: func(s []string) {
 				c := ConfigFromFile()
 				var wg sync.WaitGroup
@@ -120,7 +120,7 @@ func ResolveArgs(args []string) {
 		{
 			name: "btconnect",
 			call: []string{"btc"},
-			desc: " - Connect to bluetooth device",
+			desc: "- Connect to bluetooth device",
 			run: func(s []string) {
 				com.ConnectBT()
 			},
@@ -145,21 +145,27 @@ func ResolveArgs(args []string) {
 
 	// Show help if no args
 	if len(args) == 0 {
-		helpFunc(_args)
+		helpFunc(cmds)
 	}
 	
-	// Loop through user input arguments
-	for i, a := range args {
-
-		// Check for argument
-		if _, e := strconv.Atoi(a); !strings.HasPrefix(a, "-") || e == nil {
-			continue
-		}
-
-		// Find and execute arguments
-		arg := findArg(a, _args)
-		if arg.name != "" {
-			arg.run(resolveArgs(args[i + 1:], arg.params))
-		}
+	if a := findCommand(args[0], cmds); a.name != "" {
+		a.run(resolveArgs(args[1:], a.params))
+		return
 	}
+	fmt.Println("Command not found")
+
+	// // Loop through user input arguments
+	// for i, a := range args {
+
+	// 	// Check for argument
+	// 	if _, e := strconv.Atoi(a); !strings.HasPrefix(a, "-") || e == nil {
+	// 		continue
+	// 	}
+
+	// 	// Find and execute arguments
+	// 	arg := findArg(a, _args)
+	// 	if arg.name != "" {
+	// 		arg.run(resolveArgs(args[i + 1:], arg.params))
+	// 	}
+	// }
 }
