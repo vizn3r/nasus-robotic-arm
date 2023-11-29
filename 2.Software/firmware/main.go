@@ -2,29 +2,59 @@ package main
 
 import (
 	"bufio"
-	"firmware/app"
+	"firmware/arm"
+	"firmware/com"
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 func main() {
-	if args := os.Args; len(args) != 1 {
-		app.ResolveArgs(args[1:])
-		os.Exit(0)
-	}
-	fmt.Println("Welcome to", app.Version)
-	fmt.Println("\nType 'exit' to exit.\nType 'help' for help.\n\n---------------------------------------")
+	var wg sync.WaitGroup
+	fmt.Println("---------------------\n" + arm.Version + "\n---------------------\n")
+
+	com.CLIServer.Conf.Port = ":8080"
+	go com.CLIServer.StartCLI(&wg)
 
 	s := bufio.NewScanner(os.Stdin)
-
 	for {
-		fmt.Print("Nasus > ")
 		s.Scan()
-		if t := s.Text(); strings.ToLower(t) == "exit" {
-			os.Exit(0)
-		} else {
-			app.ResolveArgs(strings.Split(t, " "))
-		}
+		arm.ExecCode(arm.ResolveArgs(strings.Split(s.Text(), " ")))
 	}
+	// Should redo this to support arguments
+	// Maybe I should make an argument library, which I have so I don't need to
+	// firmwarePath := ""
+	// if c, args := config.ConfigFromFile(), os.Args; c.FirmwareBin != "" {
+	// 	firmwarePath = c.FirmwareBin
+	// } else if len(args) == 2 && strings.ToLower(args[1]) == "conf" {
+	// 	c.FirmwareBin = "./firmware.exe"
+	// 	config.ConfigToFile(c)
+	// 	fmt.Println("New config created at", config.MAINCONFIGPATH)
+	// 	os.Exit(0)
+	// } else if len(args) == 2 {
+	// 	c.FirmwareBin = args[1]
+	// 	config.ConfigToFile(c)
+	// 	fmt.Println("New config created at", config.MAINCONFIGPATH)
+	// 	os.Exit(0)
+	// } else {
+	// 	fmt.Println("No firmware binary/executable. Provide a [path] or enter 'conf' to auto-generate config.")
+	// 	os.Exit(0)
+	// }
+
+	// app := fiber.New()
+	// app.Post("/*", func(c *fiber.Ctx) error {
+	// 	if !auth.Auth(c.GetReqHeaders()["Authorization"][0]) {
+	// 		return c.SendStatus(401)
+	// 	}
+
+	// 	cli := exec.Command(firmwarePath)
+	// 	cli.Args = strings.Split(c.Path(), "/")
+	// 	out, err := cli.Output()
+	// 	if err != nil {
+	// 		return c.SendString(fmt.Sprintf("%v", err) + "\n\n👆 That probably means that I fucked up somewhere in code :D")
+	// 	}
+	// 	return c.Send(out)
+	// })
+	// app.Listen(":8080")
 }

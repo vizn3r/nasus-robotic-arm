@@ -1,48 +1,72 @@
 package arm
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
-// G-code directs the motion and function of the CNC machine, while M-code controls the operations not involving movements
-
-func ResolveArgs(args []string) []float64 {
-	arr := []float64{0.0, 0.0, 0.0, 0.0}
-	for _, a := range args {
-		switch strings.ToLower(a[:1]) {
-		case "x":
-			d, _ := strconv.ParseFloat(a[1:], 64)
-			arr[0] = d
-		case "y":
-			d, _ := strconv.ParseFloat(a[1:], 64)
-			arr[1] = d
-		case "z":
-			d, _ := strconv.ParseFloat(a[1:], 64)
-			arr[2] = d
-		case "f":
-			d, _ := strconv.ParseFloat(a[1:], 64)
-			arr[3] = d
-		}
-		
-	}
-	// ALWAYS IN FORMAT X Y Z F
-	return arr
+// Mainly because I'm lazy to manually write documentation, so this is for doc autogen.
+type Code struct {
+	Desc string // The whole description with everything
+	Params []string
+	Run func(args ...string)
 }
 
-// If I want to return smth, just make channel for that
-var gcodes = []func(...string) {
-	func(args ...string) { // Linear move
-		MoveXYZ(ResolveArgs(args))
+var GCodes = []Code { // For everything related with movement etc.
+	{
+		Desc: "test",
+		Run: func(args ...string) {
+			fmt.Println(args)
+		},
 	},
 }
 
-// Resolves arm code
-func ResolveCode(args []string) {
-	// ResolveArgs(args)
-	cLow := strings.ToLower(args[0])
-	if strings.HasPrefix(cLow, "g") {
-		i, _ := strconv.Atoi(args[0][1:])
-		gcodes[i](args[1:]...)
+var MCodes = []Code { // For everyting else
+	// {
+	// 	Desc: "Start TCP Server",
+	// 	Params: []string{"[port] - Server port"},
+	// 	Run: func(args ...string) {
+	// 		com.CLIServer.IsEnabled = true
+	// 	},
+	// },
+}
+
+var Version = "Nasus Firmware v0.0.1" // VERSION OF SOFTWARE
+
+// Resolves user arguments
+func ResolveArgs(args []string) []string {
+	// Show help if no args
+	if len(args) == 0 {
+		fmt.Println("Invalid.")
+		return nil
 	}
+	return args
+}
+
+func StringToInt(s string) int {
+	if f, e := strconv.Atoi(s); e == nil {
+		return f
+	}
+	return -1
+}
+
+func ExecCode(code []string) string {
+	if len(code[0]) != 2 {
+		return "Invalid."
+	}
+	if strings.ToLower(code[0][0:1]) == "g" {
+		i := StringToInt(code[0][1:2])
+		if i == -1 || i >= len(GCodes) {
+			return "Invalid."
+		}
+		GCodes[i].Run(code[1:]...)
+	} else if strings.ToLower(code[0][0:1]) == "m" {
+		i := StringToInt(code[0][1:2])
+		if i == -1 || i >= len(MCodes) {
+			return "Invalid."
+		}
+		MCodes[i].Run(code[1:]...)
+	}
+	return "Ok."
 }
