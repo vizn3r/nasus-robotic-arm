@@ -14,6 +14,8 @@ func main() {
 	var wg sync.WaitGroup
 	fmt.Println("---------------------\n" + arm.Version + "\n---------------------\n")
 
+	arm.DocGen()
+
 	com.CLIServer.Conf.Port = ":8080"
 	go com.CLIServer.StartCLI(&wg)
 

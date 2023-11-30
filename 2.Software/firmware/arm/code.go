@@ -2,6 +2,7 @@ package arm
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -69,4 +70,24 @@ func ExecCode(code []string) string {
 		MCodes[i].Run(code[1:]...)
 	}
 	return "Ok."
+}
+
+func DocGen() {
+	var data string
+	header := "# " + Version + " Documentation"
+	codes := "## GCode List"
+	data += header + "\n\n" + codes + "\n\n"
+	for i, g := range GCodes {
+		data += "### G" + strconv.Itoa(i) + "\n\n"
+		data += "> " + g.Desc + "\n"
+	}
+	for i, m := range MCodes {
+		data += "### M" + strconv.Itoa(i) + "\n\n"
+		data += "> " + m.Desc + "\n"
+	}
+
+	err := os.WriteFile("./FIRMWARE.md", []byte(data), 0777)
+	if err != nil {
+		return
+	}
 }
