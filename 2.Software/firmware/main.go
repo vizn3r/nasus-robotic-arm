@@ -2,29 +2,33 @@ package main
 
 import (
 	"bufio"
-	"firmware/app"
+	"firmware/arm"
+	"firmware/com"
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 func main() {
-	if args := os.Args; len(args) != 1 {
-		app.ResolveArgs(args[1:])
-		os.Exit(0)
+	if args := os.Args; len(args) == 2 && args[1] == "t" {
+		arm.ExecCode([]string{"t0"})
+		return
 	}
-	fmt.Println("Welcome to", app.Version)
-	fmt.Println("\nType 'exit' to exit.\nType 'help' for help.\n\n---------------------------------------")
+
+	var wg sync.WaitGroup
+	fmt.Println("---------------------\n" + arm.Version + "\n---------------------\n")
+	fmt.Print("See FIRMWARE.md for more info" + "\n=============================\n\n")
+
+	arm.DocGen()
+
+	com.CLIServer.Conf.Port = ":8080"
+	// com.CLIServer.Enable()
+	go com.CLIServer.StartCLI(&wg)
 
 	s := bufio.NewScanner(os.Stdin)
-
 	for {
-		fmt.Print("Nasus > ")
 		s.Scan()
-		if t := s.Text(); strings.ToLower(t) == "exit" {
-			os.Exit(0)
-		} else {
-			app.ResolveArgs(strings.Split(t, " "))
-		}
+		arm.ExecCode(arm.ResolveArgs(strings.Split(s.Text(), " ")))
 	}
 }

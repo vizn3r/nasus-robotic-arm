@@ -1,18 +1,31 @@
 package arm
 
 import (
+	"fmt"
 	"math"
+	"time"
 )
 
-// Calculate the required angle to get from source to destination with step and return steps (rounded)
-func AngleToSteps(deg float64, destDeg float64, step float64) float64 {
-	res := (deg - destDeg) / step
-	return math.Round(res)
+type Motor struct {
+	STEP      int     // STEP pin
+	DIR       int     // DIR pin
+	ENABLE    int     // ENABLE pin
+	StepAngle float64 // Angle of one step
 }
 
-// Convert steps to degrees with step
-func StepsToAngle(deg float64, steps float64, step float64) float64 {
-	return deg + (steps * step)
+func pow9(f float64) float64 {
+	return f * math.Pow(10, 10)
 }
 
-//dano was here
+func (m *Motor) RotateDeg(deg float64, dir int, rpm float64) {
+	pStepAngle, pDeg, pRpm := pow9(m.StepAngle), pow9(deg), pow9(rpm)
+	sd := pow9(pStepAngle/(pRpm*6))
+	sleep := time.Duration((sd/10)*float64(time.Nanosecond))
+	t := time.Now()
+	for i := 0.0; i <= pDeg; i += pStepAngle {
+		// make step functionality
+
+		time.Sleep(sleep)
+	}
+	fmt.Println(time.Since(t))
+}

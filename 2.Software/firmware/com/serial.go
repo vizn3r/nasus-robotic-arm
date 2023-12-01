@@ -1,21 +1,12 @@
 package com
 
-import (
-	"fmt"
-	"log"
+import "sync"
 
-	"go.bug.st/serial"
-)
+type SERIAL struct {
+	COM
+}
 
-func ReadSerial() {
-	ports, err := serial.GetPortsList()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(ports) == 0 {
-		log.Fatal("No serial ports found!")
-	}
-	for _, port := range ports {
-		fmt.Printf("Found port: %v\n", port)
-	}
+func StartSERIAL(wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 }
