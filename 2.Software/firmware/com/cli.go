@@ -14,8 +14,7 @@ type CLIConf struct {
 }
 
 type CLI struct {
-	IsEnabled bool
-	isRunning bool
+	COM
 	Conf CLIConf
 }
 
@@ -25,6 +24,11 @@ var CLIServer = new(CLI)
 func (cli *CLI) StartCLI(wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
+	if !cli.Start("CLI Server") {
+		return 
+	}
+	defer fmt.Println("'CLI Server' stopped.")
+	cli.isRunning = true
 	
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 
@@ -33,5 +37,4 @@ func (cli *CLI) StartCLI(wg *sync.WaitGroup) {
 	})
 
 	app.Listen(cli.Conf.Port)
-	fmt.Println("Server stopped.")
 }

@@ -2,6 +2,3 @@
 
 ## GCode List
 
-### G0
-
-> test

@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var Version = "Nasus Firmware v0.0.1" // VERSION OF SOFTWARE
+
 // Mainly because I'm lazy to manually write documentation, so this is for doc autogen.
 type Code struct {
 	Desc string // The whole description with everything
@@ -15,25 +17,23 @@ type Code struct {
 }
 
 var GCodes = []Code { // For everything related with movement etc.
-	{
-		Desc: "test",
-		Run: func(args ...string) {
-			fmt.Println(args)
-		},
-	},
+	
 }
 
 var MCodes = []Code { // For everyting else
-	// {
-	// 	Desc: "Start TCP Server",
-	// 	Params: []string{"[port] - Server port"},
-	// 	Run: func(args ...string) {
-	// 		com.CLIServer.IsEnabled = true
-	// 	},
-	// },
+	
 }
 
-var Version = "Nasus Firmware v0.0.1" // VERSION OF SOFTWARE
+var TCodes = []Code {
+	{
+		Desc: "For testing functions",
+		Run: func(args ...string) {
+			fmt.Println("Testing:")
+			arm := Arm{[]float64{0, 0, 0, 0, 0, 45}, nil}
+			arm.CalcRotation()
+		},
+	},
+}
 
 // Resolves user arguments
 func ResolveArgs(args []string) []string {
@@ -68,6 +68,12 @@ func ExecCode(code []string) string {
 			return "Invalid."
 		}
 		MCodes[i].Run(code[1:]...)
+	} else if strings.ToLower(code[0][0:1]) == "t" {
+		i := StringToInt(code[0][1:2])
+		if i == -1 || i >= len(TCodes) {
+			return "Invalid."
+		}
+		TCodes[i].Run(code[1:]...)
 	}
 	return "Ok."
 }
@@ -78,14 +84,13 @@ func DocGen() {
 	codes := "## GCode List"
 	data += header + "\n\n" + codes + "\n\n"
 	for i, g := range GCodes {
-		data += "### G" + strconv.Itoa(i) + "\n\n"
-		data += "> " + g.Desc + "\n"
+		data += "### G - Motion and function" + strconv.Itoa(i) + "\n\n"
+		data += "> **Description**" + "\n> \n" + "> " + g.Desc + "\n"
 	}
 	for i, m := range MCodes {
-		data += "### M" + strconv.Itoa(i) + "\n\n"
+		data += "### M - Operations not involving movements" + strconv.Itoa(i) + "\n\n"
 		data += "> " + m.Desc + "\n"
 	}
-
 	err := os.WriteFile("./FIRMWARE.md", []byte(data), 0777)
 	if err != nil {
 		return
