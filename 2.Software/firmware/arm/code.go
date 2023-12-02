@@ -28,9 +28,10 @@ var TCodes = []Code {
 	{
 		Desc: "For testing functions",
 		Run: func(args ...string) {
-			fmt.Println("Testing:")
-			arm := Arm{[]float64{0, 0, 0, 0, 0, 45}, nil}
-			arm.CalcRotation()
+			m := new(Motor)
+			m.StepAngle = 1.8
+			m.STEP = 17
+			m.RotateDeg(90, 1, 1)
 		},
 	},
 }

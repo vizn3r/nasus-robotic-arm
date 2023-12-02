@@ -1,8 +1,11 @@
 module firmware
 
-go 1.21.1
+go 1.21.4
 
-require github.com/gofiber/fiber/v2 v2.51.0
+require (
+	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/stianeikeland/go-rpio/v4 v4.6.0
+)
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
