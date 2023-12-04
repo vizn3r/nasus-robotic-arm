@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	if args := os.Args; len(args) == 2 && args[1] == "t" {
-		arm.ExecCode([]string{"t0"})
+	if args := os.Args; len(args) > 1 {
+		arm.ExecCode(args[1:])
 		return
 	}
 
@@ -23,7 +23,7 @@ func main() {
 	arm.DocGen()
 
 	com.CLIServer.Conf.Port = ":8080"
-	// com.CLIServer.Enable()
+	com.CLIServer.Enable()
 	go com.CLIServer.StartCLI(&wg)
 
 	s := bufio.NewScanner(os.Stdin)

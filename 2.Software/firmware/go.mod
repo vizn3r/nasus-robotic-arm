@@ -2,10 +2,7 @@ module firmware
 
 go 1.21.4
 
-require (
-	github.com/gofiber/fiber/v2 v2.51.0
-	github.com/stianeikeland/go-rpio/v4 v4.6.0
-)
+require github.com/gofiber/fiber/v2 v2.51.0
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
@@ -18,5 +15,5 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.50.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 )
