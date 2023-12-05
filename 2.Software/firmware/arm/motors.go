@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"time"
+
+	"firmware/gpio"
 )
 
 type Motor struct {
@@ -13,19 +15,24 @@ type Motor struct {
 	StepAngle float64 // Angle of one step
 }
 
-func pow9(f float64) float64 {
+func pow9(f float64) float64 {	
 	return f * math.Pow(10, 10)
 }
 
-func (m *Motor) RotateDeg(deg float64, dir int, rpm float64) {
-	pStepAngle, pDeg, pRpm := pow9(m.StepAngle), pow9(deg), pow9(rpm)
-	sd := pow9(pStepAngle/(pRpm*6))
-	sleep := time.Duration((sd/10)*float64(time.Nanosecond))
+func (m *Motor) RotateDeg(deg float64, dir int, ms int) {
+	err := gpio.Open(m.STEP)
+	if err != nil {
+		return
+	}
+	defer gpio.Close()
+	fmt.Println(time.Duration(ms)*time.Microsecond)
+	pStepAngle, pDeg := pow9(m.StepAngle), pow9(deg)
 	t := time.Now()
-	for i := 0.0; i <= pDeg; i += pStepAngle {
-		// make step functionality
-
-		time.Sleep(sleep)
+	for i := 0.0; i < pDeg; i += pStepAngle {
+		gpio.Write(m.STEP, "1")
+		time.Sleep(time.Duration(ms)*time.Microsecond)
+		gpio.Write(m.STEP, "0")	
+		time.Sleep(time.Duration(ms)*time.Microsecond)
 	}
 	fmt.Println(time.Since(t))
 }
